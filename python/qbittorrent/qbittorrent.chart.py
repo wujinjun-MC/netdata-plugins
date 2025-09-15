@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Description: qBittorrent netdata python.d module using qbittorrent-api
-# Version: v1.1
+# Version: v1.1.1
 # Author: wujinjun-MC and Gemini
 
 import json
@@ -16,104 +16,104 @@ from bases.FrameworkServices.UrlService import UrlService
 # charts order (can be overridden if you want less charts, or different order)
 ORDER = [
     'speed',
-    'connections',
-    'dht',
     'total_data',
     'session_data',
     'wasted_data',
+    'connections',
+    'dht',
     'limits',
     'disk_free',
     'io_cache',
     'io_size',
     'queue_time',
-    'share_ratio',
     'buffer_size',
+    'share_ratio',
 ]
 
 CHARTS = {
     'connections': {
-        'options': [None, 'Connections', 'connections', 'connections', 'qbittorrent.connections', 'line'],
+        'options': [None, 'Connections', 'connections', 'Connections', 'qbittorrent.connections', 'line'],
         'lines': [
-            ['total_peers', 'total_connections', 'absolute']
+            ['total_peers', 'total connections', 'absolute']
         ]
     },
     'speed': {
-        'options': [None, 'Speed', 'B/s', 'speed', 'qbittorrent.speed', 'line'],
+        'options': [None, 'Speed', 'B/s', 'Speed', 'qbittorrent.speed', 'line'],
         'lines': [
             ['download_speed', 'download', 'absolute'],
             ['upload_speed', 'upload', 'absolute']
         ]
     },
     'dht': {
-        'options': [None, 'DHT Nodes', 'nodes', 'dht', 'qbittorrent.dht', 'line'],
+        'options': [None, 'DHT Nodes', 'nodes', 'DHT', 'qbittorrent.dht', 'line'],
         'lines': [
             ['dht_nodes', 'nodes', 'absolute']
         ]
     },
     'total_data': {
-        'options': [None, 'All Time Data', 'B', 'data', 'qbittorrent.total_data', 'line'],
+        'options': [None, 'All Time Data', 'B', 'Data', 'qbittorrent.total_data', 'line'],
         'lines': [
             ['alltime_dl', 'download', 'absolute'],
             ['alltime_ul', 'upload', 'absolute']
         ]
     },
     'session_data': {
-        'options': [None, 'Session Data', 'B', 'data', 'qbittorrent.session_data', 'line'],
+        'options': [None, 'Session Data', 'B', 'Data', 'qbittorrent.session_data', 'line'],
         'lines': [
             ['dl_info_data', 'download', 'absolute'],
             ['up_info_data', 'upload', 'absolute']
         ]
     },
     'wasted_data': {
-        'options': [None, 'Wasted Session Data', 'B', 'data', 'qbittorrent.wasted_data', 'line'],
+        'options': [None, 'Wasted Session Data', 'B', 'Data', 'qbittorrent.wasted_data', 'line'],
         'lines': [
-            ['total_wasted_session', 'wasted_data', 'absolute']
+            ['total_wasted_session', 'wasted data', 'absolute']
         ]
     },
     'limits': {
-        'options': [None, 'Speed Limits', 'B/s', 'limits', 'qbittorrent.limits', 'line'],
+        'options': [None, 'Speed Limits', 'B/s', 'Limits', 'qbittorrent.limits', 'line'],
         'lines': [
-            ['dl_rate_limit', 'download_limit', 'absolute'],
-            ['up_rate_limit', 'upload_limit', 'absolute']
+            ['dl_rate_limit', 'download limit', 'absolute'],
+            ['up_rate_limit', 'upload limit', 'absolute']
         ]
     },
     'disk_free': {
-        'options': [None, 'Free Disk Space', 'B', 'disk', 'qbittorrent.disk_free', 'line'],
+        'options': [None, 'Free Disk Space', 'B', 'Disk', 'qbittorrent.disk_free', 'line'],
         'lines': [
-            ['free_space_on_disk', 'free_space', 'absolute']
+            ['free_space_on_disk', 'free space', 'absolute']
         ]
     },
     'io_cache': {
-        'options': [None, 'I/O Cache', 'percentage', 'cache', 'qbittorrent.io_cache', 'line'],
+        'options': [None, 'I/O Cache', 'percentage', 'Cache', 'qbittorrent.io_cache', 'line'],
         'lines': [
-            ['read_cache_hits', 'read_hits', 'absolute', 1, 1000],
-            ['read_cache_overload', 'read_overload', 'absolute', 1, 1000],
-            ['write_cache_overload', 'write_overload', 'absolute', 1, 1000]
+            ['read_cache_hits', 'read hits', 'absolute', 1, 1000],
+            ['read_cache_overload', 'read overload', 'absolute', 1, 1000],
+            ['write_cache_overload', 'write overload', 'absolute', 1, 1000]
         ]
     },
     'io_size': {
-        'options': [None, 'I/O Queue Size', 'jobs', 'io', 'qbittorrent.io_size', 'line'],
+        'options': [None, 'I/O Queue Size', 'jobs', 'IO', 'qbittorrent.io_size', 'line'],
         'lines': [
             ['queued_io_jobs', 'jobs', 'absolute'],
             ['total_queued_size', 'size', 'absolute']
         ]
     },
     'queue_time': {
-        'options': [None, 'Average Queue Time', 'ms', 'queue', 'qbittorrent.queue_time', 'line'],
+        'options': [None, 'Average Queue Time', 'ms', 'IO', 'qbittorrent.queue_time', 'line'],
         'lines': [
-            ['average_time_queue', 'avg_queue_time', 'absolute']
-        ]
-    },
-    'share_ratio': {
-        'options': [None, 'Global Share Ratio', 'ratio', 'ratio', 'qbittorrent.share_ratio', 'line'],
-        'lines': [
-            ['global_ratio', 'share_ratio', 'absolute', 1, 1000]
+            ['average_time_queue', 'average queue time', 'absolute']
         ]
     },
     'buffer_size': {
-        'options': [None, 'Total Buffer Size', 'B', 'buffers', 'qbittorrent.buffer_size', 'line'],
+        'options': [None, 'Total Buffer Size', 'B', 'IO', 'qbittorrent.buffer_size', 'line'],
         'lines': [
-            ['total_buffers_size', 'buffer_size', 'absolute']
+            ['total_buffers_size', 'buffer size', 'absolute']
+        ]
+    },
+    'share_ratio': {
+        'options': [None, 'Global Share Ratio', 'ratio', 'Ratio', 'qbittorrent.share_ratio', 'line'],
+        'lines': [
+            ['global_ratio', 'share ratio', 'absolute', 1, 1000]
         ]
     },
 }
