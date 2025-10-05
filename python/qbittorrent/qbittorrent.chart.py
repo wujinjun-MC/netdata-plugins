@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Description: qBittorrent netdata python.d module using qbittorrent-api
-# Version: v1.1.1
+# Version: v1.2
 # Author: wujinjun-MC and Gemini
 
 import json
@@ -10,6 +10,13 @@ except ImportError:
     Client = None
     APIConnectionError = None
     Unauthorized401Error = None
+
+# Import for URL parsing
+try:
+    from urllib.parse import urlparse, urlunparse
+except ImportError:
+    # Fallback for older Python versions if needed
+    from urlparse import urlparse, urlunparse
 
 from bases.FrameworkServices.UrlService import UrlService
 
@@ -123,36 +130,115 @@ class Service(UrlService):
         UrlService.__init__(self, configuration=configuration, name=name)
         self.order = ORDER
         self.definitions = CHARTS
+        
+        # 从配置中获取 URL, 用户名和密码
         self.url = self.configuration.get('url', 'http://127.0.0.1:8080')
         self.username = self.configuration.get('username')
         self.password = self.configuration.get('password')
+        
+        # 新增可选开关: 是否忽略SSL证书 (verify_ssl: yes/no)
+        # 修正: 确保配置值在调用 lower() 之前是字符串类型
+        verify_ssl_config = str(self.configuration.get('verify_ssl', 'yes')).lower()
+        self.verify_ssl = verify_ssl_config in ['yes', 'true', '1']
+        
         self.qbt_client = None
+
+    def _try_connect_with_scheme(self, full_url, log_on_fail=False):
+        """尝试使用指定的完整 URL 连接并认证 qBittorrent 客户端。"""
+        
+        try:
+            # qbittorrent-api Client 接受完整的 URL 字符串作为 host 参数
+            client = Client(
+                host=full_url,
+                username=self.username,
+                password=self.password,
+                # Pass the boolean flag for SSL verification
+                VERIFY_WEBUI_CERTIFICATE=self.verify_ssl 
+            )
+            client.auth_log_in()
+            self.info(f'成功连接并认证: {full_url}')
+            return client
+        
+        except Unauthorized401Error:
+            if log_on_fail:
+                self.error(f'认证失败: {full_url}')
+        except APIConnectionError as e:
+            if log_on_fail:
+                # 区分连接错误和证书错误
+                cert_error = 'certificate verify failed'
+                if cert_error in str(e) and self.verify_ssl:
+                    self.error(f'连接失败 (SSL证书验证失败): {full_url}。请检查证书或在配置中设置 verify_ssl: no')
+                else:
+                    self.error(f'连接失败: {full_url}。错误: {e}')
+        except Exception as e:
+            if log_on_fail:
+                self.error(f'尝试连接时发生意外错误: {full_url}, 错误: {e}')
+        
+        return None
+
+    def _initialize_client(self, log_on_fail=False):
+        """
+        处理 URL 格式，并尝试使用自动检测的协议连接 qBittorrent。
+        如果配置中未指定协议 (e.g., '127.0.0.1:8080')，则先尝试 HTTPS 后尝试 HTTP。
+        """
+        
+        if Client is None:
+            self.error("qbittorrent-api 库未安装。请运行 'pip install qbittorrent-api'")
+            return None
+        
+        parsed_url = urlparse(self.url)
+        
+        # 提取 hostname 和 port (netloc)
+        netloc = parsed_url.netloc
+        if not netloc and parsed_url.path:
+            # 兼容用户只输入 host:port 的情况
+            netloc = parsed_url.path
+        
+        if not netloc:
+            if log_on_fail:
+                self.error(f"无效的 URL 配置: {self.url}")
+            return None
+
+        # 确定要尝试的协议列表
+        if parsed_url.scheme in ('http', 'https'):
+            # 如果指定了协议，只尝试指定的协议
+            schemes_to_try = [parsed_url.scheme]
+        else:
+            # 如果未指定协议 (e.g., '127.0.0.1:8080')，则先尝试 HTTPS 后尝试 HTTP
+            schemes_to_try = ['https', 'http']
+        
+        for scheme in schemes_to_try:
+            # 构造完整的 URL (使用空路径、参数等)
+            full_url = urlunparse((scheme, netloc, '', '', '', ''))
+            client = self._try_connect_with_scheme(full_url, log_on_fail)
+            if client:
+                return client
+            
+        # 所有尝试失败
+        if log_on_fail and not parsed_url.scheme:
+            self.error(f"无法连接到 qBittorrent。所有协议尝试 ({netloc} + {schemes_to_try}) 均失败。")
+        return None
 
     def _get_data(self):
         """
         Get data from qBittorrent Web API using qbittorrent-api.
         :return: dict or None
         """
-        if Client is None:
-            self.error("qbittorrent-api library is not installed. Please run 'pip install qbittorrent-api'")
-            return None
-
+        
+        # 1. 尝试初始化或重用客户端
         try:
-            # Initialize client if it's not set
+            # 客户端未初始化
             if self.qbt_client is None:
-                host_parts = self.url.split(':')
-                host = host_parts[0] + ':' + host_parts[1]
-                port = host_parts[2]
-                self.qbt_client = Client(
-                    host=host,
-                    port=port,
-                    username=self.username,
-                    password=self.password
-                )
-                self.qbt_client.auth_log_in()
-                self.info('Successfully authenticated with qBittorrent.')
-
-            # Get main data
+                self.qbt_client = self._initialize_client(log_on_fail=True)
+                if not self.qbt_client:
+                    return None
+        except Exception as e:
+            self.error(f'客户端初始化失败: {e}')
+            self.qbt_client = None
+            return None
+            
+        # 2. 获取数据
+        try:
             main_data = self.qbt_client.sync_maindata()
             server_state = main_data.server_state
 
@@ -182,13 +268,20 @@ class Service(UrlService):
             return data
 
         except Unauthorized401Error:
-            self.error('Authentication failed. Re-authenticating...')
+            # 会话过期或令牌失效
+            self.error('会话过期，尝试重新认证...')
+            self.qbt_client = None # 强制重新初始化
+            
+            # 重新初始化客户端
+            self.qbt_client = self._initialize_client(log_on_fail=True)
+            if not self.qbt_client:
+                return None
+            
+            # 如果重新认证成功，重试获取数据
             try:
-                self.qbt_client.auth_log_in()
-                self.info('Successfully re-authenticated with qBittorrent.')
-                # Retry fetching data after re-authentication
                 main_data = self.qbt_client.sync_maindata()
                 server_state = main_data.server_state
+                # 重新构造数据字典 (使用与上方相同的逻辑)
                 data = {
                     'download_speed': server_state.dl_info_speed,
                     'upload_speed': server_state.up_info_speed,
@@ -201,54 +294,42 @@ class Service(UrlService):
                     'dl_rate_limit': server_state.dl_rate_limit,
                     'free_space_on_disk': server_state.free_space_on_disk,
                     'global_ratio': float(server_state.global_ratio) * 1000,
-                    'read_cache_hits': float(server_state.read_cache_hits),
-                    'read_cache_overload': float(server_state.read_cache_overload),
+                    'read_cache_hits': float(server_state.read_cache_hits) * 1000,
+                    'read_cache_overload': float(server_state.read_cache_overload) * 1000,
                     'total_buffers_size': server_state.total_buffers_size,
                     'total_queued_size': server_state.total_queued_size,
                     'total_wasted_session': server_state.total_wasted_session,
                     'up_info_data': server_state.up_info_data,
                     'up_rate_limit': server_state.up_rate_limit,
-                    'write_cache_overload': float(server_state.write_cache_overload)
+                    'write_cache_overload': float(server_state.write_cache_overload) * 1000
                 }
                 return data
             except Exception as e:
-                self.error(f'Failed to re-authenticate: {e}')
+                self.error(f'重新认证后获取数据失败: {e}')
+                self.qbt_client = None
                 return None
+
         except APIConnectionError as e:
-            self.error(f'API Connection Error: {e}')
+            self.error(f'API 连接错误: {e}')
             self.qbt_client = None
             return None
         except Exception as e:
-            self.error(f'Failed to get data from qBittorrent: {e}')
+            self.error(f'获取数据失败: {e}')
             return None
 
     def check(self):
         """
-        Check if the service is available.
+        检查服务是否可用。
         :return: bool
         """
-        if Client is None:
-            self.error("qbittorrent-api library is not installed.")
-            return False
-
-        try:
-            host_parts = self.url.split(':')
-            host = host_parts[0] + ':' + host_parts[1]
-            port = host_parts[2]
-            self.qbt_client = Client(
-                host=host,
-                port=port,
-                username=self.username,
-                password=self.password
-            )
-            self.qbt_client.auth_log_in()
-            self.info('Authentication successful, service is available.')
+        # 使用统一的初始化方法进行检查
+        self.qbt_client = self._initialize_client(log_on_fail=True)
+        
+        if self.qbt_client:
+            self.info('服务检查成功，已连接并认证。')
             return True
-        except APIConnectionError as e:
-            self.error(f'qBittorrent service not available or authentication failed: {e}')
-            return False
-        except Exception as e:
-            self.error(f'An unexpected error occurred during check: {e}')
+        else:
+            self.error('服务检查失败。无法连接或认证。')
             return False
 
     def get_urls(self):
