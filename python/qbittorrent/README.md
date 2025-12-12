@@ -20,7 +20,16 @@ File: `qbittorrent.conf`
 |---|---|---|---|
 | **1** | update_every | int: (Netdata internal)Chart update frequency (second) | 5 |
 | **2** | priority | int: (Netdata internal)Where it is shown on dashboard. 1=top, 99999999=button | 20000 |
-| **3** | url | string: qBittorrent WebUI url. Without `http://` or `https://` = auto detect | 127.0.0.1 |
+| **3** | url | string: qBittorrent WebUI url. Without `http://` or `https://` -> `https://` | http://127.0.0.1:8080 |
 | **4** | username | string: qBittorrent WebUI user name | example |
 | **5** | password | string: qBittorrent WebUI password | example |
 | **6** | verify_ssl | bool(yes/no): Verify SSL certificate if HTTPS | yes |
+
+## Debug
+
+See [python.d.plugin - How to debug a python module](https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins/python.d.plugin/#how-to-debug-a-python-module)
+
+```bash
+sudo su -s /bin/bash netdata
+/usr/libexec/netdata/plugins.d/python.d.plugin qbittorrent debug trace
+```
