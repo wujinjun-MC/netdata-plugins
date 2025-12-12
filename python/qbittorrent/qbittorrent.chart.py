@@ -39,59 +39,68 @@ ORDER = [
 
 CHARTS = {
     'connections': {
-        'options': [None, 'Connections', 'connections', 'Connections', 'qbittorrent.connections', 'line'],
+        'options': [None, 'Connections', 'connections', 'qBittorrent', 'qbittorrent4.connections', 'line'],
+        # 'options': [None, 'Connections', 'connections', 'Connections', 'qbittorrent4.connections', 'line'],
         'lines': [
             ['total_peers', 'total connections', 'absolute']
         ]
     },
     'speed': {
-        'options': [None, 'Speed', 'B/s', 'Speed', 'qbittorrent.speed', 'line'],
+        'options': [None, 'Speed', 'B/s', 'qBittorrent', 'qbittorrent4.speed', 'line'],
+        # 'options': [None, 'Speed', 'B/s', 'Speed', 'qbittorrent4.speed', 'line'],
         'lines': [
             ['download_speed', 'download', 'absolute'],
             ['upload_speed', 'upload', 'absolute']
         ]
     },
     'dht': {
-        'options': [None, 'DHT Nodes', 'nodes', 'DHT', 'qbittorrent.dht', 'line'],
+        'options': [None, 'DHT Nodes', 'nodes', 'qBittorrent', 'qbittorrent4.dht', 'line'],
+        # 'options': [None, 'DHT Nodes', 'nodes', 'DHT', 'qbittorrent4.dht', 'line'],
         'lines': [
             ['dht_nodes', 'nodes', 'absolute']
         ]
     },
     'total_data': {
-        'options': [None, 'All Time Data', 'B', 'Data', 'qbittorrent.total_data', 'line'],
+        'options': [None, 'All Time Data', 'B', 'qBittorrent', 'qbittorrent4.total_data', 'line'],
+        # 'options': [None, 'All Time Data', 'B', 'Data', 'qbittorrent4.total_data', 'line'],
         'lines': [
             ['alltime_dl', 'download', 'absolute'],
             ['alltime_ul', 'upload', 'absolute']
         ]
     },
     'session_data': {
-        'options': [None, 'Session Data', 'B', 'Data', 'qbittorrent.session_data', 'line'],
+        'options': [None, 'Session Data', 'B', 'qBittorrent', 'qbittorrent4.session_data', 'line'],
+        # 'options': [None, 'Session Data', 'B', 'Data', 'qbittorrent4.session_data', 'line'],
         'lines': [
             ['dl_info_data', 'download', 'absolute'],
             ['up_info_data', 'upload', 'absolute']
         ]
     },
     'wasted_data': {
-        'options': [None, 'Wasted Session Data', 'B', 'Data', 'qbittorrent.wasted_data', 'line'],
+        'options': [None, 'Wasted Session Data', 'B', 'qBittorrent', 'qbittorrent4.wasted_data', 'line'],
+        # 'options': [None, 'Wasted Session Data', 'B', 'Data', 'qbittorrent4.wasted_data', 'line'],
         'lines': [
             ['total_wasted_session', 'wasted data', 'absolute']
         ]
     },
     'limits': {
-        'options': [None, 'Speed Limits', 'B/s', 'Limits', 'qbittorrent.limits', 'line'],
+        'options': [None, 'Speed Limits', 'B/s', 'qBittorrent', 'qbittorrent4.limits', 'line'],
+        # 'options': [None, 'Speed Limits', 'B/s', 'Limits', 'qbittorrent4.limits', 'line'],
         'lines': [
             ['dl_rate_limit', 'download limit', 'absolute'],
             ['up_rate_limit', 'upload limit', 'absolute']
         ]
     },
     'disk_free': {
-        'options': [None, 'Free Disk Space', 'B', 'Disk', 'qbittorrent.disk_free', 'line'],
+        'options': [None, 'Free Disk Space', 'B', 'qBittorrent', 'qbittorrent4.disk_free', 'line'],
+        # 'options': [None, 'Free Disk Space', 'B', 'Disk', 'qbittorrent4.disk_free', 'line'],
         'lines': [
             ['free_space_on_disk', 'free space', 'absolute']
         ]
     },
     'io_cache': {
-        'options': [None, 'I/O Cache', 'percentage', 'Cache', 'qbittorrent.io_cache', 'line'],
+        'options': [None, 'I/O Cache', 'percentage', 'qBittorrent', 'qbittorrent4.io_cache', 'line'],
+        # 'options': [None, 'I/O Cache', 'percentage', 'Cache', 'qbittorrent4.io_cache', 'line'],
         'lines': [
             ['read_cache_hits', 'read hits', 'absolute', 1, 1000],
             ['read_cache_overload', 'read overload', 'absolute', 1, 1000],
@@ -99,26 +108,30 @@ CHARTS = {
         ]
     },
     'io_size': {
-        'options': [None, 'I/O Queue Size', 'jobs', 'IO', 'qbittorrent.io_size', 'line'],
+        'options': [None, 'I/O Queue Size', 'jobs', 'qBittorrent', 'qbittorrent4.io_size', 'line'],
+        # 'options': [None, 'I/O Queue Size', 'jobs', 'IO', 'qbittorrent4.io_size', 'line'],
         'lines': [
             ['queued_io_jobs', 'jobs', 'absolute'],
             ['total_queued_size', 'size', 'absolute']
         ]
     },
     'queue_time': {
-        'options': [None, 'Average Queue Time', 'ms', 'IO', 'qbittorrent.queue_time', 'line'],
+        'options': [None, 'Average Queue Time', 'ms', 'qBittorrent', 'qbittorrent4.queue_time', 'line'],
+        # 'options': [None, 'Average Queue Time', 'ms', 'IO', 'qbittorrent4.queue_time', 'line'],
         'lines': [
             ['average_time_queue', 'average queue time', 'absolute']
         ]
     },
     'buffer_size': {
-        'options': [None, 'Total Buffer Size', 'B', 'IO', 'qbittorrent.buffer_size', 'line'],
+        'options': [None, 'Total Buffer Size', 'B', 'qBittorrent', 'qbittorrent4.buffer_size', 'line'],
+        # 'options': [None, 'Total Buffer Size', 'B', 'IO', 'qbittorrent4.buffer_size', 'line'],
         'lines': [
             ['total_buffers_size', 'buffer size', 'absolute']
         ]
     },
     'share_ratio': {
-        'options': [None, 'Global Share Ratio', 'ratio', 'Ratio', 'qbittorrent.share_ratio', 'line'],
+        'options': [None, 'Global Share Ratio', 'ratio', 'qBittorrent', 'qbittorrent4.share_ratio', 'line'],
+        # 'options': [None, 'Global Share Ratio', 'ratio', 'Ratio', 'qbittorrent4.share_ratio', 'line'],
         'lines': [
             ['global_ratio', 'share ratio', 'absolute', 1, 1000]
         ]
